@@ -105,7 +105,7 @@ Send a query to Perplexity AI with full parameter control.
 ```json
 {
   "message": "What is machine learning?",
-  "model": "llama-3.1-sonar-small-128k-online",
+  "model": "sonar",
   "max_tokens": 500,
   "temperature": 0.7,
   "system_message": "You are a helpful AI assistant."
@@ -117,7 +117,7 @@ Send a query to Perplexity AI with full parameter control.
 {
   "success": true,
   "response": "Machine learning is a subset of artificial intelligence...",
-  "model_used": "llama-3.1-sonar-small-128k-online",
+  "model_used": "sonar",
   "error": null
 }
 ```
@@ -146,14 +146,11 @@ Get information about available Perplexity AI models.
 ```json
 {
   "available_models": [
-    "llama-3.1-sonar-small-128k-online",
-    "llama-3.1-sonar-small-128k-chat",
-    "llama-3.1-sonar-large-128k-online",
-    "llama-3.1-sonar-large-128k-chat",
-    "llama-3.1-8b-instruct",
-    "llama-3.1-70b-instruct"
+    "sonar",
+    "sonar-pro",
+    "sonar-reasoning"
   ],
-  "default_model": "llama-3.1-sonar-small-128k-online",
+  "default_model": "sonar",
   "note": "Check Perplexity AI documentation for the most current model list"
 }
 ```
@@ -172,7 +169,7 @@ The service supports configuration through:
 
 ### Default Configuration
 - **Base URL:** `https://api.perplexity.ai`
-- **Default Model:** `llama-3.1-sonar-small-128k-online`
+- **Default Model:** `sonar`
 - **Max Tokens:** `1000`
 - **Temperature:** `0.7`
 
@@ -218,7 +215,7 @@ response = requests.post(
         "message": "What is FastAPI?",
         "max_tokens": 500,
         "temperature": 0.3,
-        "model": "llama-3.1-sonar-large-128k-online"
+        "model": "sonar-pro"
     }
 )
 print(response.json())
@@ -236,6 +233,101 @@ perplexity/
 ├── README.md           # This file
 └── .gitignore          # Git ignore rules
 ```
+
+## Related Project: MCP Server
+
+### Overview
+
+A companion MCP (Model Context Protocol) server is available for AI assistants:
+
+🔗 **GitHub**: [atiyil/simple-mcp-server](https://github.com/atiyil/simple-mcp-server)  
+📁 **Local**: `~/dev/simple-mcp-server`
+
+The MCP server provides direct integration with AI assistants like Claude Desktop and Cline, allowing them to query Perplexity AI as a tool. It shares the same Perplexity client library but operates independently via the Model Context Protocol.
+
+### Key Differences
+
+| Feature | FastAPI Service | MCP Server |
+|---------|----------------|------------|
+| **Protocol** | HTTP REST API | MCP (stdio) |
+| **Port** | 8000 | N/A (stdio) |
+| **Use Case** | Web apps, APIs, scripts | AI assistants (Claude, Cline) |
+| **Interface** | HTTP endpoints | Tool calls |
+| **Authentication** | Direct API key | Environment variable |
+| **Models** | `sonar`, `sonar-pro`, `sonar-reasoning` | `sonar`, `sonar-pro`, `sonar-reasoning` |
+
+### Using Both Together
+
+You can run both services simultaneously without conflicts:
+
+**Terminal 1 - FastAPI Service (for HTTP API):**
+```bash
+cd ~/dev/perplexity
+source venv/bin/activate
+python main.py
+# Available at http://localhost:8000
+```
+
+**Terminal 2 - MCP Server Testing (optional):**
+```bash
+cd ~/dev/simple-mcp-server
+source venv/bin/activate
+PERPLEXITY_API_KEY=your_key npx @modelcontextprotocol/inspector python mcp_server.py
+# Inspector at http://localhost:6274
+```
+
+**AI Assistants (automatic):**
+Claude Desktop and Cline will automatically start the MCP server when needed, no manual intervention required.
+
+### When to Use Each
+
+**Use FastAPI Service when:**
+- Building web applications
+- Creating custom scripts or automation
+- Need HTTP API access
+- Want to integrate with non-MCP tools
+- Building microservices architecture
+
+**Use MCP Server when:**
+- Using Claude Desktop
+- Using Cline (VS Code extension)
+- Want AI assistants to query Perplexity directly
+- Need seamless tool integration in conversations
+- Working within MCP-compatible environments
+
+### Setup MCP Server
+
+Quick setup for the MCP server:
+
+```bash
+# Clone or navigate to the MCP server
+cd ~/dev/simple-mcp-server
+
+# Create virtual environment and install dependencies
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Test with MCP Inspector
+PERPLEXITY_API_KEY=your_key npx @modelcontextprotocol/inspector python mcp_server.py
+```
+
+For Claude Desktop configuration, add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "perplexity": {
+      "command": "python",
+      "args": ["/Users/your_username/dev/simple-mcp-server/mcp_server.py"],
+      "env": {
+        "PERPLEXITY_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+See the [MCP Server README](https://github.com/atiyil/simple-mcp-server) for complete documentation.
 
 ## Development
 
